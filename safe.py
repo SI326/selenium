@@ -116,4 +116,3 @@ def analyze_tcc(image_path):
 if __name__ == "__main__":
     screenshot = capture_mosdac_image()
     analyze_tcc(screenshot)
-
