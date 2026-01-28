@@ -11,6 +11,12 @@ LATEST_RESULT = {}
 def index():
     return render_template('index.html')
 
+import logging
+
+# Configure logging
+logging.basicConfig(filename='server_error.log', level=logging.ERROR, 
+                    format='%(asctime)s %(levelname)s: %(message)s')
+
 @app.route('/analyze', methods=['POST'])
 def analyze():
     global LATEST_RESULT
@@ -30,8 +36,10 @@ def analyze():
         return jsonify({"status": "success", "data": result})
         
     except Exception as e:
-        print(f"Error during analysis: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        error_msg = str(e)
+        print(f"Error during analysis: {error_msg}")
+        logging.error(f"Error during analysis: {error_msg}", exc_info=True)
+        return jsonify({"status": "error", "message": error_msg}), 500
 
 @app.route('/results', methods=['GET'])
 def get_results():
@@ -41,4 +49,4 @@ if __name__ == '__main__':
     # Ensure static directories exist
     os.makedirs("static/screenshots", exist_ok=True)
     os.makedirs("static/heatmaps", exist_ok=True)
-    app.run(debug=True, port=5001)
+    app.run(debug=False, port=5001)
