@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satellite Cloud Analysis</title>
+    <style>
+        :root {
+            --primary-color: #60a5fa;
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: #000;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- STARRY BACKGROUND --- */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-image:
+                radial-gradient(1px 1px at 10% 10%, white, transparent),
+                radial-gradient(1px 1px at 20% 20%, white, transparent),
+                radial-gradient(2px 2px at 30% 30%, white, transparent),
+                radial-gradient(1px 1px at 40% 40%, white, transparent),
+                radial-gradient(2px 2px at 50% 50%, white, transparent);
+            background-size: 550px 550px;
+            animation: twinkle 100s linear infinite;
+            opacity: 0.8;
+        }
+
+        @keyframes twinkle {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 550px 550px;
+            }
+        }
+
+        /* --- SOLAR SYSTEM --- */
+        .solar-system {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .sun {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #fbbf24, #d97706);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 60px rgba(251, 191, 36, 0.8);
+        }
+
+        .orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .planet {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: inset -2px -2px 6px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s;
+            /* For potential impact shake */
+        }
+
+        .planet.impacted {
+            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+            filter: brightness(2) saturate(2);
+        }
+
+        /* Planet Config */
+        .orbit-mercury {
+            width: 100px;
+            height: 100px;
+            animation: spin 5s linear infinite;
+        }
+
+        .mercury {
+            width: 8px;
+            height: 8px;
+            background: #a3a3a3;
+        }
+
+        .orbit-venus {
+            width: 140px;
+            height: 140px;
+            animation: spin 8s linear infinite;
+        }
+
+        .venus {
+            width: 12px;
+            height: 12px;
+            background: #eab308;
+        }
+
+        .orbit-earth {
+            width: 200px;
+            height: 200px;
+            animation: spin 12s linear infinite;
+        }
+
+        .earth {
+            width: 14px;
+            height: 14px;
+            background: #3b82f6;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+        }
+
+        .orbit-mars {
+            width: 260px;
+            height: 260px;
+            animation: spin 15s linear infinite;
+        }
+
+        .mars {
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+        }
+
+        .orbit-jupiter {
+            width: 380px;
+            height: 380px;
+            animation: spin 30s linear infinite;
+        }
+
+        .jupiter {
+            width: 30px;
+            height: 30px;
+            background: #d97706;
+        }
+
+        .orbit-saturn {
+            width: 500px;
+            height: 500px;
+            animation: spin 45s linear infinite;
+        }
+
+        .saturn {
+            width: 26px;
+            height: 26px;
+            background: #fcd34d;
+            position: relative;
+        }
+
+        .saturn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 10px;
+            border: 2px solid rgba(253, 224, 71, 0.6);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .orbit-uranus {
+            width: 620px;
+            height: 620px;
+            animation: spin 60s linear infinite;
+        }
+
+        .uranus {
+            width: 20px;
+            height: 20px;
+            background: #22d3ee;
+        }
+
+        .orbit-neptune {
+            width: 740px;
+            height: 740px;
+            animation: spin 80s linear infinite;
+        }
+
+        .neptune {
+            width: 18px;
+            height: 18px;
+            background: #3b82f6;
+        }
+
+        @keyframes spin {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        /* --- METEORS & EXPLOSIONS --- */
+        .meteor {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px white, 0 0 20px #fcd34d;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .meteor::after {
+            /* Tail */
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 2px;
+            background: linear-gradient(to right, white, transparent);
+            transform: translateY(-50%) translateX(-100%);
+            transform-origin: right center;
+        }
+
+        .explosion {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #fff, #f59e0b, transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
+            animation: explode 0.8s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(10);
+                opacity: 0;
+            }
+        }
+
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translate(-50%, -50%) translate3d(-1px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate(-50%, -50%) translate3d(2px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translate(-50%, -50%) translate3d(-4px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate(-50%, -50%) translate3d(4px, 0, 0);
+            }
+        }
+
+        /* --- UI --- */
+        .container {
+            max-width: 1200px;
+            width: 90%;
+            margin: 40px auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin: 0 0 10px 0;
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+            text-shadow: 0 0 30px rgba(96, 165, 250, 0.4);
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid var(--primary-color);
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.2);
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 0 40px rgba(96, 165, 250, 0.6);
+        }
+
+        button:disabled {
+            border-color: #475569;
+            background: rgba(0, 0, 0, 0.5);
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .results-container {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.7));
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        h2 {
+            color: #fff;
+            border-bottom: 2px solid var(--glass-border);
+            padding-bottom: 15px;
+            margin-top: 0;
+        }
+
+        .images-grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .img-wrapper {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .img-wrapper:hover img {
+            transform: scale(1.03);
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* --- UPDATED METRICS --- */
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .metric-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .metric-label {
+            text-align: left;
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            text-align: right;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                width: 95%;
+                margin: 20px auto;
+            }
+
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+
+            /* Hide outer planets on mobile */
+            .orbit-uranus,
+            .orbit-neptune,
+            .uranus,
+            .neptune,
+            .orbit-saturn,
+            .saturn {
+                display: none;
+            }
+        }
+
+        /* --- ALERT BOX --- */
+        .alert-box {
+            display: none;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            font-weight: 600;
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .alert-safe {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.4);
+            color: #4ade80;
+        }
+
+        .alert-warning {
+            background: rgba(234, 179, 8, 0.2);
+            border-color: rgba(234, 179, 8, 0.4);
+            color: #facc15;
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="stars"></div>
+
+    <div class="solar-system" id="solarSystem">
+        <div class="sun"></div>
+        <!-- Planets with IDs for collision detection -->
+        <div class="orbit orbit-mercury">
+            <div class="planet mercury" id="p-mercury"></div>
+        </div>
+        <div class="orbit orbit-venus">
+            <div class="planet venus" id="p-venus"></div>
+        </div>
+        <div class="orbit orbit-earth">
+            <div class="planet earth" id="p-earth"></div>
+        </div>
+        <div class="orbit orbit-mars">
+            <div class="planet mars" id="p-mars"></div>
+        </div>
+        <div class="orbit orbit-jupiter">
+            <div class="planet jupiter" id="p-jupiter"></div>
+        </div>
+        <div class="orbit orbit-saturn">
+            <div class="planet saturn" id="p-saturn"></div>
+        </div>
+        <div class="orbit orbit-uranus">
+            <div class="planet uranus" id="p-uranus"></div>
+        </div>
+        <div class="orbit orbit-neptune">
+            <div class="planet neptune" id="p-neptune"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Satellite TCC Analysis 🛰️</h1>
+            <p>Real-time AI Detection of Tropical Cloud Clusters</p>
+        </header>
+
+        <!-- Educational Content -->
+        <div class="content-grid"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 40px; animation: fadeInUp 0.8s ease-out 0.1s backwards;">
+            <div class="card">
+                <h2>ℹ️ What is TCC?</h2>
+                <p style="color: #cbd5e1; line-height: 1.6;">
+                    <strong>Tropical Cloud Clusters (TCCs)</strong> are large systems of thunderstorms that can develop
+                    into cyclones.
+                    This tool uses satellite imagery to detect them early by analyzing <em>brightness temperature</em>.
+                </p>
+            </div>
+            <div class="card">
+                <h2>⚙️ How It Works</h2>
+                <ul style="color: #cbd5e1; line-height: 1.6; padding-left: 20px; margin: 0;">
+                    <li><strong>Capture:</strong> Live IR images from MOSDAC.</li>
+                    <li><strong>Analyze:</strong> CV scans for cold regions (< 240K).</li>
+                    <li><strong>Detect:</strong> Calculate center & cloud height.</li>
+                    <li><strong>Visualise:</strong> Plot heatmap results.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="analyzeBtn" onclick="runAnalysis()">Initiate Scan</button>
+            <div style="height: 20px;"></div>
+            <div id="loader" class="loader"></div>
+        </div>
+
+        <div id="errorBox" class="error-message"></div>
+
+        <!-- RISK ALERT BOX -->
+        <div id="riskAlert" class="alert-box"></div>
+
+        <div id="resultsArea" class="results-container">
+            <div class="card">
+                <h2>📊 Analysis Metrics</h2>
+                <div id="metricsList"></div>
+            </div>
+            <div class="card">
+                <h2>📸 Infra Imagery</h2>
+                <div class="images-grid">
+                    <div>
+                        <h3>Raw Satellite Capture</h3>
+                        <div class="img-wrapper"><img id="origImg" src="" alt="Captured Image"></div>
+                    </div>
+                    <div>
+                        <h3>Thermal Heatmap</h3>
+                        <div class="img-wrapper"><img id="heatmapImg" src="" alt="Heatmap"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 Satellite TCC Analysis Project. Powered by Artificial Intelligence.</p>
+        </footer>
+    </div>
+
+    <script>
+        /* --- METEOR SYSTEM --- */
+        const solarSystem = document.getElementById('solarSystem');
+        const planetIds = ['p-mercury', 'p-venus', 'p-earth', 'p-mars', 'p-jupiter', 'p-saturn']; // Targets
+
+        function spawnMeteor() {
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor';
+
+            // Random start position (off-screen)
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.max(window.innerWidth, window.innerHeight) / 1.5;
+            const startX = window.innerWidth / 2 + Math.cos(angle) * radius;
+            const startY = window.innerHeight / 2 + Math.sin(angle) * radius;
+
+            // Select a target planet
+            const targetId = planetIds[Math.floor(Math.random() * planetIds.length)];
+            const targetEl = document.getElementById(targetId);
+
+            // If target is hidden (mobile), just shoot to center
+            let targetX, targetY;
+            if (targetEl && targetEl.offsetParent !== null) {
+                const rect = targetEl.getBoundingClientRect();
+                targetX = rect.left + rect.width / 2;
+                targetY = rect.top + rect.height / 2;
+            } else {
+                targetX = window.innerWidth / 2;
+                targetY = window.innerHeight / 2;
+            }
+
+            meteor.style.left = `${startX}px`;
+            meteor.style.top = `${startY}px`;
+
+            // Rotate tail
+            const dx = targetX - startX;
+            const dy = targetY - startY;
+            const rotation = Math.atan2(dy, dx) * 180 / Math.PI;
+            meteor.style.transform = `rotate(${rotation}deg)`;
+
+            document.body.appendChild(meteor);
+
+            // Animate
+            const speed = 5 + Math.random() * 5; // Pixels per frame approx
+            let x = startX;
+            let y = startY;
+
+            function updateMeteor() {
+                x += (dx / Math.abs(dx || 1)) * speed; // Simple linear (improve later for vector)
+                y += (dy / Math.abs(dy || 1)) * speed;
+
+                // Re-calculate vector for better accuracy
+                const currentDx = targetX - x;
+                const currentDy = targetY - y;
+                const dist = Math.sqrt(currentDx * currentDx + currentDy * currentDy);
+
+                if (dist > 10) {
+                    x += (currentDx / dist) * speed;
+                    y += (currentDy / dist) * speed;
+                    meteor.style.left = `${x}px`;
+                    meteor.style.top = `${y}px`;
+
+                    // Collision Check
+                    if (dist < 20) {
+                        triggerExplosion(targetX, targetY, targetEl);
+                        meteor.remove();
+                        return;
+                    }
+                    requestAnimationFrame(updateMeteor);
+                } else {
+                    meteor.remove(); // Missed or done
+                }
+            }
+            requestAnimationFrame(updateMeteor);
+        }
+
+        function triggerExplosion(x, y, targetEl) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.left = `${x - 5}px`;
+            explosion.style.top = `${y - 5}px`;
+            document.body.appendChild(explosion);
+
+            // Shake Planet
+            if (targetEl) {
+                targetEl.classList.add('impacted');
+                setTimeout(() => targetEl.classList.remove('impacted'), 500);
+            }
+
+            setTimeout(() => explosion.remove(), 1000);
+        }
+
+        // Spawn randomly
+        setInterval(spawnMeteor, 2000 + Math.random() * 3000); // Every 2-5 seconds
+
+        /* --- ANALYSIS LOGIC --- */
+        async function runAnalysis() {
+            const btn = document.getElementById('analyzeBtn');
+            const loader = document.getElementById('loader');
+            const errorBox = document.getElementById('errorBox');
+            const resultsArea = document.getElementById('resultsArea');
+
+            btn.disabled = true;
+            btn.innerHTML = 'Scanning <span style="opacity:0.7">...</span>';
+            loader.style.display = 'block';
+            errorBox.style.display = 'none';
+
+            if (resultsArea.style.display === 'grid') { resultsArea.style.opacity = '0.5'; }
+
+            try {
+                const response = await fetch('/analyze', { method: 'POST' });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    displayResults(result.data);
+                } else {
+                    showError(result.message || "An unknown error occurred.");
+                }
+            } catch (error) {
+                showError("Network connection failed.");
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Initiate Scan";
+                loader.style.display = 'none';
+                resultsArea.style.opacity = '1';
+            }
+        }
+
+        function displayResults(data) {
+            const resultsArea = document.getElementById('resultsArea');
+            const metricsList = document.getElementById('metricsList');
+            const origImg = document.getElementById('origImg');
+            const heatmapImg = document.getElementById('heatmapImg');
+
+            metricsList.innerHTML = '';
+
+            const metrics = [
+                ["Pixel Count", data.pixel_count],
+                ["Mean Temp", `${data.mean_tb} K`],
+                ["Min Temp", `${data.min_tb} K`],
+                ["Max Cloud Ht", `${data.max_cloud_height} km`],
+                ["Conv. Center", `${data.center_x}, ${data.center_y}`],
+                ["Mean Radius", `${data.mean_radius} px`]
+            ];
+
+            metrics.forEach(([label, value], index) => {
+                const row = document.createElement('div');
+                row.className = 'metric-row';
+                row.style.animation = `fadeInUp 0.3s ease-out ${index * 0.05}s backwards`;
+                row.innerHTML = `<span class="metric-label">${label}</span><span class="metric-value">${value}</span>`;
+                metricsList.appendChild(row);
+            });
+
+            // --- RISK LOGIC ---
+            const riskAlert = document.getElementById('riskAlert');
+            riskAlert.className = 'alert-box'; // Reset
+            let message = "";
+
+            // Logic: High Cloud Height (>12km) OR Low Min Temp (<220K) indicates strong convection
+            if (data.max_cloud_height > 12.0 || data.min_tb < 210) {
+                riskAlert.classList.add('alert-danger');
+                message = "⚠️ SEVERE STORM WARNING: Deep convection detected! High cloud tops and very low temperatures indicate potential cyclone formation.";
+            } else if (data.max_cloud_height > 9.0 || data.min_tb < 235) {
+                riskAlert.classList.add('alert-warning');
+                message = "⚠️ CAUTION: Moderate convection detected. Monitoring recommended.";
+            } else {
+                riskAlert.classList.add('alert-safe');
+                message = "✅ CONDITIONS NORMAL: No significant convective activity detected.";
+            }
+
+            riskAlert.textContent = message;
+            riskAlert.style.display = 'block';
+
+            const ts = new Date().getTime();
+            origImg.src = `/static/${data.original_image}?t=${ts}`;
+            heatmapImg.src = `/static/${data.heatmap_image}?t=${ts}`;
+
+            resultsArea.style.display = 'grid';
+
+            if (window.innerWidth < 768) {
+                resultsArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function showError(msg) {
+            const errorBox = document.getElementById('errorBox');
+            errorBox.innerHTML = `<strong>Error:</strong> ${msg}`;
+            errorBox.style.display = 'block';
+        }
+    </script>
+
+</body>
+
+</html>
